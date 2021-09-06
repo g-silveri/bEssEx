@@ -1,0 +1,117 @@
+.form-floating {
+  position: relative;
+
+  > .form-control,
+  > .form-control-plaintext,
+  > .form-select {
+    height: $form-floating-height;
+    line-height: $form-floating-line-height;
+    vertical-align: middle; // Custom
+    background-color: $white; // Custom
+  }
+
+  > label {
+    position: absolute;
+    top: 0;
+    left: 0;
+    // width: 100%;
+    // height: 100%; // allow textareas
+    height: auto; // Custom
+    max-width: -moz-available; // Custom
+    max-width: -webkit-fill-available; // Custom
+    padding: $form-floating-padding-y $form-floating-padding-x;
+    overflow: hidden;
+    color: rgba($black, 65%); // Custom
+    text-align: start;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    pointer-events: none;
+    border: $input-border-width solid transparent; // Required for aligning label's text with the input as it affects inner box model
+    transform-origin: 0 0;
+    @include transition($form-floating-transition);
+  }
+
+  > .form-control,
+  > .form-control-plaintext {
+    padding: $form-floating-padding-y $form-floating-padding-x;
+
+    &::placeholder {
+      color: transparent;
+      // visibility: hidden; // Custom
+    }
+
+    &:focus,
+    &:not(:placeholder-shown) {
+      padding-top: $form-floating-input-padding-t;
+      padding-bottom: $form-floating-input-padding-b;
+    }
+    // Duplicated because `:-webkit-autofill` invalidates other selectors when grouped
+    &:-webkit-autofill {
+      padding-top: $form-floating-input-padding-t;
+      padding-bottom: $form-floating-input-padding-b;
+    }
+  }
+
+  > .form-select {
+    // padding-top: $form-floating-input-padding-t;
+    // padding-bottom: $form-floating-input-padding-b;
+    padding: $form-floating-input-padding-t $form-select-indicator-padding $form-floating-input-padding-b $form-select-padding-x; // Custom
+  }
+
+  > .form-control:focus,
+  > .form-control:not(:placeholder-shown),
+  > .form-control-plaintext,
+  > .form-select {
+    ~ label {
+      display: ruby; // Custom
+      padding: .1rem 1rem; // Custom
+      @include font-size($form-label-font-size); // Custom
+      color: rgba($black, 65%); // Custom
+      background-color: rgba($white, 100%); // Custom
+      border: $input-border-width solid $input-focus-border-color; // Custom
+      border-radius: $border-radius-pill; // Custom
+      box-shadow: $input-btn-focus-box-shadow; // Custom
+      // opacity: $form-floating-label-opacity;
+      transform: $form-floating-label-transform;
+    }
+  }
+  // Duplicated because `:-webkit-autofill` invalidates other selectors when grouped
+  > .form-control:-webkit-autofill {
+    box-shadow: inset 0 0 0 30px rgba($white, 1); // Custom
+
+    ~ label {
+      padding: .1rem 1rem; // Custom
+      @include font-size($form-label-font-size); // Custom
+      color: rgba($black, 65%); // Custom
+      background-color: rgba($white, 100%); // Custom
+      border: $input-border-width solid $input-focus-border-color; // Custom
+      border-radius: $border-radius-pill; // Custom
+      box-shadow: $input-btn-focus-box-shadow; // Custom
+      // opacity: $form-floating-label-opacity;
+      transform: $form-floating-label-transform;
+    }
+  }
+  // Custom
+  // Duplicated because `:autofill` invalidates other selectors when grouped
+  > .form-control:autofill {
+    box-shadow: inset 0 0 0 30px rgba($white, 1);
+
+    ~ label {
+      padding: .1rem 1rem;
+      @include font-size($form-label-font-size);
+      color: rgba($black, 65%);
+      background-color: rgba($white, 100%);
+      border: $input-border-width solid $input-focus-border-color;
+      border-radius: $border-radius-pill;
+      box-shadow: $input-btn-focus-box-shadow;
+      // opacity: $form-floating-label-opacity;
+      transform: $form-floating-label-transform;
+    }
+  }
+
+  > .form-control-plaintext {
+    ~ label {
+      border-width: $input-border-width 0; // Required to properly position label text - as explained above
+    }
+  }
+}

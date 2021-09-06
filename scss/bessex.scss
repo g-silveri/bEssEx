@@ -1,0 +1,96 @@
+@import "mixins/banner";
+@include bsBanner("");
+
+
+// scss-docs-start import-stack
+// Include all of Bootstrap
+
+// Include any default variable overrides here
+
+// @import "../bootstrap/scss/bootstrap";
+
+// Add additional custom code here
+
+
+// Configuration
+@import "functions";
+@import "variables"; // Variables
+@import "maps";
+@import "mixins"; // Classes & methods
+@import "utilities"; // Margin & padding
+
+// Layout & components
+@import "root";
+@import "reboot"; // Headings, paragraph margins & anchor tag decoration
+// @import "type"; // Text size
+@import "images";
+@import "containers";
+@import "grid"; // make-container();
+@import "tables";
+@import "forms";
+@import "buttons";
+@import "transitions";
+@import "dropdown";
+// @import "button-group";
+@import "nav";
+@import "navbar";
+@import "card";
+@import "accordion";
+@import "breadcrumb";
+@import "pagination";
+// @import "badge";
+// @import "alert";
+// @import "progress";
+// @import "list-group"; // To be added
+@import "close";
+@import "toasts";
+@import "modal";
+@import "tooltip";
+@import "popover";
+@import "carousel";
+// @import "spinners";
+// @import "offcanvas";
+@import "placeholders";
+
+// Helpers
+@import "helpers";
+
+// Utilities
+@import "utilities/api";
+// scss-docs-end import-stack
+
+// Add additional custom code here
+
+// Adds a capital first letter to nearly every text
+// with the pseudo-element `::first-letter`.
+* {
+	&:not(a, input, span, .form-floating) {
+		&::first-letter {
+			text-transform: uppercase;
+		}
+	}
+}
+
+a,
+input,
+span,
+.fl-unset,
+.form-floating {
+	&::first-letter {
+		text-transform: unset;
+	}
+}
+
+// Helper class for `span`s or anchor tags.
+.fl-uppercase {
+	&::first-letter {
+		text-transform: uppercase;
+	}
+}
+
+.row {
+	&::before,
+	&::after {
+		display: none; // Safari `.row` bugfix
+	}
+}

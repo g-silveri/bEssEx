@@ -1,0 +1,808 @@
+  //
+ // Bootstrap `<form>` mixin
+//
+
+
+// The short mixin call (in case the variables are defined externally):
+//
+// @include form-mixin($color_primary, $color_secondary, $color_file, $bg_color_primary, $bg_color_secondary, $bg_color_file, $border, $border_focus_color, $check_radius_default, $radius_default, $radius_transformed, $focus_box_shadow);
+//
+// Variables can also be replaced with the proper <values>.
+
+
+// The long mixin call (in case the variables are defined internally):
+//
+// @include form-mixin(
+//   $color_primary: <value>,
+//   $color_secondary: <value>,
+//   $color_file: <value>,
+//   $bg_color_primary: <value>,
+//   $bg_color_secondary: <value>,
+//   $bg_color_file: <value>,
+//   $border: <value>,
+//   $border_focus_color: <value>,
+//   $check_radius_default: <value>,
+//   $radius_default: <value>,
+//   $radius_transformed: <value>,
+//   $focus_box_shadow: (inset 0 1px 2px rgba(0, 0, 0, .08), <value>),
+//   $transition: <value> (.15s ease-in-out)
+// );
+
+
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ /* `<input>`s must have a `:placeholder-shown` set (even if left as an empty string [" "]) for the proper animation cycle to happen. */
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+// For issues with division happening when it shouldn't: see https://github.com/sass/sass/issues/667
+
+
+// Webpack to enable division in the recolor mixin.
+@use "sass:math";
+
+// Mixin recolor
+//
+// Generates filters to automatically convert the `input[type="date"]`'s calendar icon color to the preset value, pulled from
+// https://stackoverflow.com/questions/61973473/sass-mixin-to-convert-a-hex-to-a-css-filter/66365650#66365650
+@mixin recolor($color: #303030, $opacity: 1) {
+  $r: math.div(red($color), 255); // $r: red($color) / 255;
+  $g: math.div(green($color), 255); // $g: green($color) / 255;
+  $b: math.div(blue($color), 255); // $b: blue($color) / 255;
+  $a: $opacity;
+
+  // Grayscale fallback if SVG from data URL is not supported.
+  $lightness: lightness($color);
+  filter: saturate(0%) brightness(0%) invert($lightness) opacity($opacity);
+
+  // Color filter.
+  $svg_filter_id: "recolor";
+  filter: url("data:image/svg+xml;utf8,\
+    <svg xmlns='http://www.w3.org/2000/svg'>\
+      <filter id='#{$svg_filter_id}' color-interpolation-filters='sRGB'>\
+        <feColorMatrix type='matrix' values='\
+          0 0 0 0 #{$r}\
+          0 0 0 0 #{$g}\
+          0 0 0 0 #{$b}\
+          0 0 0 #{$a} 0\
+        '/>\
+      </filter>\
+    </svg>\
+    ##{$svg_filter_id}");
+}
+
+
+// scss-docs-start color-functions
+// Tint a color: mix a color with white
+@function tint-color($color, $weight) {
+  @return mix(white, $color, $weight);
+}
+// scss-docs-end color-functions
+
+
+// scss-docs-start gradient-bg-mixin
+@mixin gradient-bg($color: null) {
+  background-color: $color;
+}
+// scss-docs-end gradient-bg-mixin
+
+
+// The mixin formula:
+//
+@mixin form-mixin(
+// `color` <<BEFORE/AFTER>> the `transition`.
+$color_primary,
+// `color` <<DURING>> the `transition`.
+$color_secondary,
+// `color` <<BEFORE/AFTER>> the `transition`.
+$color_file,
+// `background-color` <<BEFORE/AFTER>> the `transition`.
+$bg_color_primary,
+// `background-color` <<DURING>> the `transition`.
+$bg_color_secondary,
+// `background-color` <<BEFORE/AFTER>> the `transition`.
+$bg_color_file,
+// `border` <<BEFORE/AFTER>> the `transition`.
+$border,
+// `border-color` <<DURING>> the `transition`.
+$border_focus_color,
+// `border-radius` <<BEFORE/AFTER>> the `transition` (check/switch).
+$check_radius_default,
+// `border-radius` <<BEFORE/AFTER>> the `transition` (everything else).
+$radius_default,
+// `border-radius` <<DURING>> the `transition` (all elements).
+$radius_transformed,
+// `box-shadow` <<DURING>> the `transition`.
+$focus_box_shadow) {
+  // General transition values
+  //
+  // A few specific high-level interventions.
+
+  // Parent level selectors.
+  input,
+  .form-floating,
+  .select-chevron,
+  .form-check,
+  .form-switch {
+    transition: .15s ease-in-out;
+
+    // Parent level selectors on the `::after` pseudo-element and direct children level selectors <<DURING>> the `transition`.
+    &::after,
+    > label,
+    > .form-check-label,
+    > .form-control,
+    > .form-select,
+    > .form-check-input,
+    > ::after {
+      transition: .15s ease-in-out;
+    }
+  }
+
+  // Direct children level selectors <<DURING>> the `:hover` state.
+  label,
+  .form-check-label,
+  .form-select {
+    &:hover {
+      cursor: pointer;
+    }
+  }
+
+  // Direct children level selectors <<DURING>> the `:active` state.
+  label,
+  .form-check-label,
+  .form-control,
+  .form-select,
+  .form-check-input {
+    &:active {
+      cursor: progress;
+    }
+  }
+
+
+  //
+  // General `<form>` controls
+  //
+
+  // Generic wrapper.
+  * {
+    // `.form-control:not([type="file"])` and `.form-select` <<BEFORE/AFTER>> the `transition`.
+    > .form-control:not([type="file"]),
+    > .form-select {
+      color: $color_primary;
+      background-color: $bg_color_primary;
+      border: $border;
+      border-radius: $radius_default;
+      animation-name: autofill_out_primary;
+      animation-duration: .15s;
+      animation-timing-function: ease-in-out;
+      animation-fill-mode: both;
+
+      // `.form-control:not([type="file"])` and `.form-select` <<DURING>> the `:focus` state.
+      &:focus {
+        color: $color_secondary;
+        background-color: $bg_color_secondary;
+        border: $border;
+        animation-name: autofill_out_secondary;
+        animation-duration: .15s;
+        animation-timing-function: ease-in-out;
+        animation-fill-mode: both;
+      }
+    }
+
+    // `.form-control:not([type="file"])`'s individual style <<BEFORE/AFTER>> the `transition`.
+    > .form-control:not([type="file"]) {
+      // `.form-control:not([type="file"])` <<DURING>> the `:focus` state (necessary to reset state).
+      &:focus {
+        box-shadow: none;
+
+        // `* .form-control:not([type="file"])::placeholder` <<DURING>> the `:focus` state.
+        &::placeholder {
+          color: $color_secondary;
+        }
+      }
+
+      // `.form-control:not([type="file"])`'s individual style (necessary for `div .form-control:not(:placeholder-shown)` pseudo-class's transition effect).
+      &:not(:placeholder-shown) {
+        color: $color_secondary;
+        background-color: $bg_color_secondary;
+        border-color: $border_focus_color;
+        box-shadow: $focus_box_shadow;
+        // Example (bEssEx's default):
+        // box-shadow: inset 0 1px 2px rgba(0, 0, 0, .08), 0 0 .15rem rgba(102, 175, 233, .6);
+
+        // `.form-control:not([type="file"])` <<DURING>> the `div .form-control:not(:placeholder-shown):not(:focus)` state (necessary to set style <<AFTER>> `:focus` state is removed from `.form-control:not([type="file"])`).
+        &:not(:focus) {
+          color: $color_primary;
+          background-color: $bg_color_primary;
+          border: $border;
+          box-shadow: none;
+          animation-name: autofill_noPlace_noFocus_primary;
+          animation-duration: .15s;
+          animation-timing-function: ease-in-out;
+          animation-fill-mode: both;
+        }
+      }
+
+      // `* .form-control:not([type="file"])::placeholder` <<BEFORE/AFTER>> the `:focus` state.
+      &::placeholder {
+        color: $color_primary;
+      }
+    }
+
+    // `.form-select`'s individual style (necessary because its initial setting is different than that of the `.form-control`).
+    > .form-select {
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='#{$color_primary}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+
+      // `.form-select` <<DURING>> the `:focus` state.
+      &:focus {
+        border-color: $border_focus_color;
+        box-shadow: $focus_box_shadow;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' transform='180' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='#{$color_secondary}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+      }
+
+      // `.form-select` <<DURING>> the `:active` state.
+      &:active {
+        border: $border;
+        box-shadow: none;
+      }
+
+      // `<option>` <<DURING>> the `:disabled` pseudo-class state.
+      option:disabled {
+        color: $color_primary;
+        background-color: $bg_color_primary;
+      }
+    }
+
+    // Duplicated because `:-webkit-autofill` invalidates other selectors when grouped.
+    > .form-control:-webkit-autofill, // WebKit specific
+		> textarea:-webkit-autofill { // WebKit specific
+      &:not([type="file"]) {
+        animation-name: autofill_in_secondary;
+        animation-delay: 1s; // Safari support (any positive time runs instantly)
+        animation-fill-mode: both;
+
+        // `:-webkit-autofill` <<DURING>> the `:not(:focus)` state.
+        &:not(:focus) {
+          animation-name: autofill_in_primary;
+          animation-delay: 1s; // Safari support (any positive time runs instantly)
+          animation-fill-mode: both;
+        }
+      }
+    }
+
+    // Duplicated because `:autofill` invalidates other selectors when grouped.
+    > .form-control:autofill { // Firefox 94 and newer
+      animation-name: autofill_in_secondary;
+      animation-delay: 0;
+      animation-fill-mode: both;
+      background-image: unset;
+
+      // `:autofill` <<DURING>> the `:not(:focus)` state.
+      &:not(:focus) {
+        animation-name: autofill_in_primary;
+        animation-delay: 0;
+        animation-fill-mode: both;
+      }
+    }
+
+    // Firefox 67 (2019-05-21)–94 (2021-11-02; excluding).
+    > .form-control {
+      &:-moz-autofill, // Fallback selector
+      &:-moz-autofill-preview { // Fallback selector
+        filter: none;
+      }
+    }
+
+    // `.form-select`'s individual style <<DURING>> the `:-webkit-autofill` state.
+    > .form-select:-webkit-autofill {
+      animation-name: autofill_in_secondary;
+      animation-delay: 1s; // Safari support (any positive time runs instantly)
+      animation-fill-mode: both;
+
+      // `.form-select:-webkit-autofill` <<DURING>> the `:not(:focus)` state.
+      &:not(:focus) {
+        animation-name: autofill_in_primary;
+        animation-delay: 1s; // Safari support (any positive time runs instantly)
+        animation-fill-mode: both;
+      }
+
+      // `<option>`'s individual style <<DURING>> the `.form-select:-webkit-autofill` state.
+      option {
+        color: $color_secondary;
+        background-color: $bg_color_secondary;
+      }
+    }
+
+    // `.form-control[type="file"]`'s individual style <<BEFORE/AFTER>> the `transition`.
+    > .form-control[type="file"] {
+      color: $color_primary;
+      background-color: $bg_color_primary;
+      border: $border;
+      border-radius: $radius_default;
+      box-shadow: none;
+
+      // `.form-control[type="file"]`'s individual style <<DURING>> the `:focus` state.
+      &:focus {
+        background-color: $bg_color_secondary;
+        border-color: $border_focus_color;
+        box-shadow: $focus_box_shadow;
+      }
+
+      // `.form-control[type="file"]:not(:disabled):not([readonly])`'s individual style <<BEFORE/AFTER>> the `transition`.
+      &:not(:disabled):not([readonly]) {
+        // `.form-control[type="file"]:not(:disabled):not([readonly])`'s individual style <<DURING>> the `:active` state.
+        &:active {
+          cursor: progress;
+        }
+      }
+
+      // `.form-control[type="file"]::file-selector-button`'s individual style <<BEFORE/AFTER>> the `transition`.
+      &::file-selector-button {
+        color: $color_file;
+        background-color: $bg_color_file;
+        border-inline-end-width: 1px;
+      }
+
+      // `.form-control[type="file"]::-webkit-file-upload-button`'s individual style <<BEFORE/AFTER>> the `transition`.
+      &::-webkit-file-upload-button {
+        color: $color_file;
+        background-color: $bg_color_file;
+        border-inline-end-width: 1px;
+      }
+
+      // `.form-control[type="file"]`'s individual style <<DURING>> the `:hover:not(:disabled):not([readonly])` state.
+      &:hover:not(:disabled):not([readonly]) {
+        &::file-selector-button,
+        &::-webkit-file-upload-button {
+          background-color: rgba($bg_color_file, .8);
+        }
+      }
+    }
+
+    // `<input type="date">`'s individual style <<BEFORE/AFTER>> the `transition`.
+    > input[type="date"] {
+      height: 30px;
+      min-width: 170px;
+      color: $color_primary;
+      background-color: $bg_color_primary;
+      border: $border;
+      padding: 0 1rem;
+      appearance: none;
+
+      // `<input type="date">`'s individual style <<DURING>> the `:focus` state.
+      &:hover {
+        opacity: .8;
+      }
+
+      // `<input type="date">`'s individual style <<DURING>> the `:active` state.
+      &:active {
+        cursor: progress;
+      }
+
+      // `<input type="date">`'s individual style <<DURING>> the `:focus` state.
+      &:focus {
+        border-color: $border_focus_color;
+        box-shadow: $focus_box_shadow;
+      }
+
+      // `<input type="date">`'s individual style <<DURING>> the `:focus-visible` state.
+      &:focus-visible {
+        outline: none;
+      }
+
+      // `<input type="date">`'s pseudo-individual elements' style <<BEFORE/AFTER>> the `transition`.
+      &::-webkit-datetime-edit { padding: 0; }
+      &::-webkit-datetime-edit-fields-wrapper { background: $bg_color_primary; }
+      &::-webkit-datetime-edit-text { color: $color_primary; padding: 0 0.3em; }
+      &::-webkit-datetime-edit-minute { color: $color_primary; }
+      &::-webkit-datetime-edit-hour-field { color: $color_primary; }
+      &::-webkit-datetime-edit-day-field { color: $color_primary; }
+      &::-webkit-datetime-edit-month-field { color: $color_primary; }
+      &::-webkit-datetime-edit-year-field { color: $color_primary; }
+      &::-webkit-inner-spin-button { display: none; }
+      // The `<input type="date"]>`'s calendar icon is a shadow DOM element whose colors are set through `background-image` and therefore independently unchangeable which makes it impossible to conform to the project's color palette.
+      &::-webkit-calendar-picker-indicator {
+        // The following solution replaces the system default icon with a nearly identical SVG and then passes a mixin that automatically creates a filter based on the desired color.
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='15' viewBox='0 0 24 24'><path fill='%23303030' d='M20 3h-1V1h-2v2H7V1H5v2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 18H4V8h16v13z'/></svg>"); // Custom calendar icon SVG.
+        @include recolor($color_primary, 1); // `filter` mixin
+        cursor: pointer;
+
+        // `input[type="date"]::-webkit-calendar-picker-indicator`'s individual style <<DURING>> the `:active` state.
+        &:active { cursor: progress; }
+      }
+
+      // `<input type="date">`'s individual pseudo-elements' style <<DURING>> the `transition`.
+      &::-webkit-datetime-edit,
+      &::-webkit-datetime-edit-fields-wrapper,
+      &::-webkit-datetime-edit-text,
+      &::-webkit-datetime-edit-minute,
+      &::-webkit-datetime-edit-hour-field,
+      &::-webkit-datetime-edit-day-field,
+      &::-webkit-datetime-edit-month-field,
+      &::-webkit-datetime-edit-year-field,
+      &::-webkit-inner-spin-button {
+        &:focus {
+          color: $color_secondary;
+          background-color: $bg_color_secondary;
+        }
+      }
+    }
+  }
+
+
+  //
+  // Floating `<label>`s
+  //
+
+  // Wrapper class (necessary to overlap the default `<form>`'s style).
+  .form-floating {
+    // Wrapper class (used to overlap the default `.form-select`'s chevron set on `background-image`).
+    &.select-chevron {
+      > .form-select {
+        background-image: none;
+      }
+
+      // Chevron <<BEFORE/AFTER>> the `transition`.
+      &::after {
+        content: '';
+        position: absolute;
+        right: 1.94rem;
+        top: 50.5%;
+        transform: translateY(-50.5%);
+        border-left: 6px solid transparent;
+        border-right: 6px solid transparent;
+        border-top: 6px solid $color_primary;
+        pointer-events: none;
+      }
+
+      // Chevron <<DURING>> the `:focus-within::after` state (pseudo-classes must always come before pseudo-elements or else it won't work).
+      &:focus-within::after {
+        border-top-color: $color_secondary;
+        transform: rotate(180deg);
+        top: 43.75%;
+      }
+    }
+
+    // `.form-control` and `.form-select` <<BEFORE/AFTER>> the `transition`.
+    > .form-control,
+    > .form-select {
+      background-color: $bg_color_primary;
+
+      // `.form-control` and `.form-select` <<DURING>> the `:focus` state.
+      &:focus {
+        // `<label>` <<DURING>> the `.form-floating > .form-control:focus, .form-floating > .form-select:focus` state.
+        ~ label {
+          color: $color_primary;
+          background-color: $bg_color_primary;
+          border: $border;
+          border-radius: $radius_transformed;
+        }
+      }
+    }
+
+    // `.form-control`'s individual style <<BEFORE/AFTER>> the `transition`.
+    > .form-control {
+      // `.form-control` <<DURING>> the `:focus` state.
+      &:focus {
+        // `<label>` <<DURING>> the `.form-floating .form-control:focus, .form-floating .form-select:focus` state (necessary to reset state).
+        ~ label {
+          box-shadow: none;
+        }
+      }
+
+      // `.form-control`'s individual style (necessary for `.form-floating .form-control:not(:placeholder-shown)` pseudo-class's transition effect).
+      &:not(:placeholder-shown) {
+        border-radius: $radius_default;
+        // `<label>` <<DURING>> the `.form-floating .form-control:not(:placeholder-shown)` state.
+        ~ label {
+          border: $border;
+          border-color: $border_focus_color;
+          border-radius: $radius_transformed;
+          box-shadow: $focus_box_shadow;
+        }
+
+        // `.form-control` <<DURING>> the `.form-floating .form-control:not(:placeholder-shown):not(:focus)` state (necessary to set style <<AFTER>> `:focus` state is removed from `.form-control`).
+        &:not(:focus) {
+          border: $border;
+          box-shadow: none;
+
+          // `<label>` <<DURING>> the `.form-floating .form-control:not(:placeholder-shown):not(:focus)` state (necessary to set style <<AFTER>> `:focus` state is removed from `.form-control`).
+          ~ label {
+            color: $color_secondary;
+            background-color: $bg_color_secondary;
+          }
+        }
+      }
+
+      // `.form-floating .form-control:not([type="file"])::placeholder` <<BEFORE/AFTER>> the `:focus` state.
+      &::placeholder {
+        color: transparent;
+      }
+    }
+
+    // `.form-select`'s individual style (necessary because its `<label>`'s initial setting is different than that of the `.form-control`).
+    > .form-select {
+      // `<label>` <<BEFORE/AFTER>> the `transition`.
+      ~ label {
+        color: $color_secondary;
+        background-color: $bg_color_secondary;
+        border: $border;
+        border-color: $border_focus_color;
+        border-radius: $radius_transformed;
+        box-shadow: $focus_box_shadow;
+      }
+
+      // `.form-select` <<DURING>> the `:focus` state.
+      &:focus {
+        border-color: $border_focus_color;
+        box-shadow: $focus_box_shadow;
+
+        // `<label>` <<DURING>> the `.form-select:focus` state.
+        ~ label {
+          border-color: $border_focus_color;
+          box-shadow: $focus_box_shadow;
+        }
+      }
+
+      // `.form-select` <<DURING>> the `:active` state.
+      &:active {
+        border: $border;
+        box-shadow: none;
+
+        // `<label>` <<DURING>> the `.form-select:active` state.
+        ~ label {
+          color: $color_primary;
+          background-color: $bg_color_primary;
+          border: $border;
+          box-shadow: none;
+        }
+      }
+    }
+
+    // `<label>`'s individual style (necessary to reset the framework's default style).
+    > label {
+      color: $color_primary;
+    }
+  }
+
+
+  //
+  // Check/switch/radio
+  //
+
+  // Wrapper class.
+  .form-check {
+    > .form-check-input {
+      // Check/switch/radio <<BEFORE/AFTER>> the `transition`.
+      background-color: $bg_color_primary;
+      border: $border;
+
+      // Check/radio <<DURING>> the `:hover:not(:active)` state.
+      &:hover:not(:active) {
+        cursor: crosshair;
+        // Check/radio <<DURING>> the `:hover:checked:not(:active)` state.
+        &:checked {
+          cursor: pointer;
+        }
+      }
+
+      // Check/switch <<BEFORE/AFTER>> the `transition`.
+      &[type="checkbox"] {
+        border-radius: $check_radius_default;
+      }
+
+      // Radio <<BEFORE/AFTER>> the `transition`.
+      &[type="radio"] {
+        // Radio <<DURING>> the `:active` state.
+        &:active {
+          border-radius: 0;
+        }
+      }
+
+      // Check <<DURING>> the `:active` state.
+      &:active {
+        border-radius: 50%;
+      }
+
+      // Check/switch/radio <<DURING>> the `:focus` state (necessary to reset the framework's default style).
+      &:focus {
+        border-color: $border_focus_color !important;
+        box-shadow: $focus_box_shadow;
+      }
+
+      // Check/switch/radio <<DURING>> the `:checked` state (necessary to toggle style <<AFTER>> mouse click).
+      &:checked {
+        background-color: $bg_color_secondary;
+
+        // Check/switch/radio <<DURING>> the `:checked:not(:focus)` state (necessary to set style <<AFTER>> the `:focus` state is removed).
+        &:not(:focus) {
+          border-color: $border_focus_color !important;
+          box-shadow: $focus_box_shadow;
+        }
+      }
+
+      // Check <<BEFORE>> the `transition` (`:indeterminate` pseudo-class's state).
+      &[type="checkbox"]:indeterminate {
+        background-color: $bg_color_secondary;
+        border-color: $border_focus_color !important;
+      }
+    }
+
+    // `.form-check` <<DURING>> the `:active` state (necessary to extend style behavior when clicking the `<label>`).
+    &:active {
+      // Check/switch/radio <<DURING>> the `.form-check:active` state.
+      > .form-check-input[type="checkbox"],
+      > .form-check-input[type="radio"],
+      > .form-check-input[type="radio"]:checked:not(:focus) {
+        border-color: $border_focus_color;
+        box-shadow: none;
+      }
+
+      // Check/switch <<DURING>> the `.form-check:active` state.
+      > .form-check-input[type="checkbox"] {
+        border-radius: 50%;
+      }
+
+      // Radio <<DURING>> the `.form-check:active` state.
+      > .form-check-input[type="radio"] {
+        border-radius: 0;
+      }
+    }
+  }
+
+
+  // Check/switch/radio's `<label>` <<BEFORE/DURING/AFTER>> the `transition`
+  //
+  // Removes `user-select` in all devices and sets `color`.
+  .form-check-label {
+    // See https://stackoverflow.com/questions/826782/how-to-disable-text-selection-highlighting
+    color: $color_primary;
+    -webkit-touch-callout: none; // iOS Safari
+      -webkit-user-select: none; // Safari
+       -khtml-user-select: none; // Konqueror HTML
+         -moz-user-select: none; // Old versions of Firefox
+          -ms-user-select: none; // Internet Explorer/Edge
+              user-select: none; // Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox
+  }
+
+
+  // Switch's individual style
+  //
+  // Necessary to overlap `.form-check > .form-check-input`.
+
+  .form-switch {
+    // Switch
+    > .form-check-input {
+      // Switch <<DURING>> the `:hover:not(:active)` state.
+      &:hover:not(:active) {
+        cursor: pointer;
+      }
+
+      // Switch <<DURING>> the `:active` state.
+      &:active {
+        border-radius: 25% / 50%;
+      }
+    }
+
+    // `.form-switch` <<DURING>> the `:active` state (necessary to extend style behavior when clicking the `<label>`).
+    &:active {
+      // Switch <<DURING>> the `.form-switch:active` state.
+      > .form-check-input[type="checkbox"] {
+        border-color: $border_focus_color;
+        border-radius: 25% / 50%;
+      }
+    }
+  }
+
+
+  // Range
+  //
+  // Style range inputs the same across browsers. Vendor-specific rules for pseudo-elements
+  // cannot be mixed. As such, there are no shared styles for focus or active states on
+  // prefixed selectors.
+
+  // `.form-range` <<BEFORE/AFTER>> the `:focus` state.
+  .form-range {
+    // `.form-range` (and its pseudo-elements) <<DURING>> the `:focus` state.
+    &:focus {
+      // Pseudo-elements must be split across multiple rulesets to have an effect.
+      // No box-shadow() mixin for focus accessibility.
+      &::-webkit-slider-thumb { box-shadow: 0 0 0 1px #fff, 0 0 0 0.25rem rgba($bg_color_primary, 25%); }
+      &::-moz-range-thumb     { box-shadow: 0 0 0 1px #fff, 0 0 0 0.25rem rgba($bg_color_primary, 25%); }
+    }
+
+    // `.form-range::-webkit-slider-thumb` pseudo-element <<BEFORE/AFTER>> the `:focus` state.
+    &::-webkit-slider-thumb {
+      background-color: $bg_color_primary;
+
+      // `.form-range::-webkit-slider-thumb` pseudo-element <<DURING>> the `:active` state.
+      &:active {
+        @include gradient-bg(tint-color($bg_color_primary, 70%));
+      }
+    }
+
+    // `.form-range::-webkit-slider-runnable-track` pseudo-element <<BEFORE/AFTER>> the `:focus` state.
+    &::-webkit-slider-runnable-track {
+      border-radius: $check_radius_default;
+    }
+
+    // `.form-range::-moz-range-thumb` pseudo-element <<BEFORE/AFTER>> the `:focus` state.
+    &::-moz-range-thumb {
+      background-color: $bg_color_primary;
+
+      // `.form-range::-moz-range-thumb` pseudo-element <<DURING>> the `:active` state.
+      &:active {
+        @include gradient-bg(tint-color($bg_color_primary, 70%));
+      }
+    }
+
+    // `.form-range::-moz-range-track` pseudo-element <<BEFORE/AFTER>> the `:focus` state.
+    &::-moz-range-track {
+      border-radius: $check_radius_default;
+    }
+  }
+
+
+  // Animations
+  //
+  // See https://stackoverflow.com/questions/40788178/is-it-possible-to-animate-webkit-text-fill-color
+
+  // `<input>`'s `:-webkit-autofill` and `:autofill` animation <<BEFORE>> the `transition`.
+  @keyframes autofill_in_primary {
+    0%, 100% {
+      -webkit-text-fill-color: $color_primary; // WebKit specific
+      box-shadow: inset 0 0 0 30px rgba($bg_color_primary, 1); // WebKit specific
+    }
+  }
+
+  // `<input>`'s `:-webkit-autofill` and `:autofill` animation <<DURING>> the `:focus` state.
+  @keyframes autofill_in_secondary {
+    0%, 100% {
+      -webkit-text-fill-color: $color_secondary; // WebKit specific
+      box-shadow: inset 0 0 0 30px rgba($bg_color_secondary, 1); // WebKit specific
+    }
+  }
+
+  // `<input>`'s animation <<AFTER>> the `transition`.
+  @keyframes autofill_noPlace_noFocus_primary {
+    0% {
+      color: $color_secondary;
+      background-color: $bg_color_secondary;
+    }
+
+    100% {
+      color: $color_primary;
+      background-color: $bg_color_primary;
+    }
+  }
+
+  // `<input>`'s animation <<BEFORE/AFTER>> the `transition`.
+  @keyframes autofill_out_primary {
+    0%, 100% {
+      color: $color_primary;
+      background-color: $bg_color_primary;
+    }
+  }
+
+  // `<input>`'s animation <<DURING>> the `:focus` state.
+  @keyframes autofill_out_secondary {
+    0%, 100% {
+      color: $color_secondary;
+      background-color: $bg_color_secondary;
+    }
+  }
+
+
+  // Flush accordion items
+  //
+  // Remove borders and border-radius to keep accordion items edge-to-edge.
+
+  .accordion-flush {
+    .accordion-button {
+      &:not(.collapsed) {
+        &::after {
+          background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='#{$color_secondary}'><path fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/></svg>");
+        }
+      }
+    }
+  }
+}

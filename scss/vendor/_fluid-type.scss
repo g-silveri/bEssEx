@@ -1,0 +1,106 @@
+// See https://css-tricks.com/snippets/css/fluid-typography/
+
+// The equation
+//
+// body {
+//   font-size: calc([minimum size] + ([maximum size] - [minimum size]) * ((100vw - [minimum viewport width]) / ([maximum viewport width] - [minimum viewport width])));
+// }
+
+// The mixin
+//
+@use "sass:math";
+// See https://stackoverflow.com/questions/12328259/how-do-you-strip-the-unit-from-any-number-in-sass
+@function strip-unit($value) {
+  @return math.div($value, ($value * 0 + 1));
+}
+
+@mixin fluid-type($min-vw, $max-vw, $mob-multiplier, $desk-multiplier, $min-font-size, $max-font-size) {
+  // $u1: unit($min-vw);
+  // $u2: unit($max-vw);
+  // $u3: unit($min-font-size);
+  // $u4: unit($max-font-size);
+
+  // @if $u1 == $u2 and $u1 == $u3 and $u1 == $u4 {
+  //   & {
+      // font-size: $min-font-size;
+      // @media screen and (min-width: $min-vw) {
+      //   font-size: calc(#{$min-font-size} + #{strip-unit($max-font-size - $min-font-size)} * ((100vw - #{$min-vw}) / #{strip-unit($max-vw - $min-vw)}));
+      // }
+      // @media screen and (min-width: $max-vw) {
+      //   font-size: $max-font-size;
+      // }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      font-size: $min-font-size;
+      @media screen and (min-width: $min-vw) and (max-width: 575.98px) {
+        font-size: calc($mob-multiplier * calc(#{$min-font-size} + #{strip-unit($max-font-size - $min-font-size)} * ((100vw - #{$min-vw}) / #{strip-unit($max-vw - $min-vw)})));
+        line-height: $mob-multiplier;
+      }
+
+      @media screen and (min-width: 576px) and (max-width: $max-vw) {
+        font-size: calc($desk-multiplier * calc(#{$min-font-size} + #{strip-unit($max-font-size - $min-font-size)} * ((100vw - #{$min-vw}) / #{strip-unit($max-vw - $min-vw)})));
+        line-height: $desk-multiplier;
+      }
+
+      @media screen and (min-width: $max-vw) {
+        font-size: $max-font-size;
+      }
+  //   }
+  // }
+}
+
+// The formula
+//
+// @include fluid-type($min_width, $max_width, $mob_multi, $desk_multi, $min_font, $max_font);
+$min_width: 20em;
+$max_width: 100em;
+$mob_multi: 1.5;
+$desk_multi: 1.2;
+
+h1, .h1 {
+  @include fluid-type($min_width, $max_width, $mob_multi, $desk_multi, 1.73rem, 2.5rem);
+}
+
+h2, .h2 {
+  @include fluid-type($min_width, $max_width, $mob_multi, $desk_multi, 1.54rem, 2rem);
+}
+
+h3, .h3 {
+  @include fluid-type($min_width, $max_width, $mob_multi, $desk_multi, 1.44rem, 1.75rem);
+}
+
+h4, .h4 {
+  @include fluid-type($min_width, $max_width, $mob_multi, $desk_multi, 1.35rem, 1.5rem);
+}
+
+h5, .h5 {
+  @include fluid-type($min_width, $max_width, $mob_multi, $desk_multi, 1.25rem, 1.25rem);
+}
+
+h6, .h6 {
+  @include fluid-type($min_width, $max_width, $mob_multi, $desk_multi, 1rem, 1rem);
+}
+
+p, .p {
+  @include fluid-type($min_width, $max_width, $mob_multi, $desk_multi, 1rem, 1rem);
+}
+
+small, .small {
+  @include fluid-type($min_width, $max_width, $mob_multi, $desk_multi, 0.875rem, 0.875rem);
+}

@@ -1,0 +1,14 @@
+// Engaging keyboard interaction
+//
+// Pulled from https://codepen.io/argyleink/pen/eYGaPEM
+
+@media (prefers-reduced-motion: no-preference) {
+  :focus {
+    outline: 1px inset $blue-custom;
+    transition: outline-offset .15s ease;
+  }
+
+  :focus:not(:active) {
+    outline-offset: 5px;
+  }
+}
